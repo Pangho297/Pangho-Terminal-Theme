@@ -24,4 +24,14 @@ are not automatically upgraded or replaced.
 - Source: https://github.com/projekt0n/github-nvim-theme
 - License: `licenses/github-nvim-theme-MIT.txt`
 
+## Hermes CLI compatibility patch
+
+`hermes/cli-diff-colors.patch` contains a minimal modification and context from
+Hermes Agent's MIT-licensed `agent/display.py`, enabling its CLI to consume the
+same explicit diff colors as its TUI.
+
+- Source: https://github.com/NousResearch/hermes-agent
+- Copyright (c) 2025 Nous Research
+- License: `licenses/hermes-agent-MIT.txt`
+
 Other applications and optional UI plugins keep their own licenses.

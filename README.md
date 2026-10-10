@@ -113,10 +113,49 @@ lua require('github_light').setup({ auto_install = false })
 
 GitHub 테마의 캐시 때문에 사용자 지정 색이 반영되지 않을 때는 Neovim에서 `:GithubThemeCompile`을 실행한 뒤 다시 확인하세요.
 
+## Hermes diff 색상과 CLI 호환 패치
+
+추가 줄은 연녹색 배경 `#dafbe1` + 진녹색 글씨 `#116329`, 제거 줄은 연빨강 배경 `#ffebe9` + 진빨강 글씨 `#82071e`를 사용합니다. `diff_added`, `diff_added_word`, `diff_removed`, `diff_removed_word`에 지정되어 있으며, 다른 포인트·상태 색은 바꾸지 않습니다.
+
+Hermes TUI는 이 스킨 키를 지원하지만, 여기서 검증한 CLI의 `agent/display.py`는 어두운 배경과 흰 글씨를 직접 계산하고 첫 결과를 계속 캐시했습니다. 스킨만 바꿔도 같은 문제가 남는 CLI를 위해 `hermes/cli-diff-colors.patch`를 제공합니다. 이 패치는 diff 전용 색상 쌍을 읽도록 하고 오래된 캐시를 제거하며, 별도 색상 지정이 없는 다른 스킨은 기존 표시를 유지합니다.
+
+apply는 **스킨만 설치**하며 Hermes 소스 패치를 자동 적용하지 않습니다. CLI에서도 같은 증상이 있다면, 실제 Hermes 소스 위치를 확인한 뒤 다음 절차를 사용하세요. 기본 경로가 아닌 설치는 `HERMES_SOURCE`를 그 위치로 바꾸세요.
+
+```sh
+cd ~/Projects/terminal-theme
+HERMES_SOURCE="$HOME/.hermes/hermes-agent"
+THEME_REPO="$PWD"
+git -C "$HERMES_SOURCE" status --short -- agent/display.py
+# 기존 로컬 수정이 있으면 먼저 별도로 백업하고 충돌 여부를 검토하세요.
+git -C "$HERMES_SOURCE" apply --check "$THEME_REPO/hermes/cli-diff-colors.patch"
+# --check가 성공했을 때만 실행합니다.
+git -C "$HERMES_SOURCE" apply "$THEME_REPO/hermes/cli-diff-colors.patch"
+./scripts/apply --only hermes --no-reload
+```
+
+이미 설치된 CLI가 이 키를 지원하면 소스 패치는 필요 없습니다. 버전 차이로 `--check`가 실패하면 강제로 적용하지 마세요. 패치는 여기서 검증한 소스 구조와 호환되는 버전용이며, 모든 Hermes 버전에 적용된다고 보장하지 않습니다.
+
+소스 코드는 실행 중인 프로세스에 자동으로 다시 로드되지 않으므로, 작업을 마친 뒤 Hermes를 다시 실행해야 새 CLI diff 표시가 반영됩니다. 이전 출력의 색이 소급 변경되지는 않습니다.
+
+Hermes 업데이트 전이나 코드 패치를 되돌릴 때는 먼저 역적용 가능 여부를 확인하세요:
+
+```sh
+git -C "$HERMES_SOURCE" apply --reverse --check "$THEME_REPO/hermes/cli-diff-colors.patch"
+git -C "$HERMES_SOURCE" apply --reverse "$THEME_REPO/hermes/cli-diff-colors.patch"
+```
+
+이 역패치는 렌더러 코드만 되돌립니다. 스킨은 apply가 만든 백업으로 별도 복구할 수 있습니다.
+
 ## 테스트
 
 ```sh
 python3 -m unittest discover -s tests -v
+```
+
+실제 설치된 Hermes CLI 렌더러의 diff 색상도 검증하려면 호환 패치를 적용한 소스 위치를 명시합니다. 이 환경변수가 없으면 해당 렌더러 테스트는 skip되며, 스킨 파일 테스트는 계속 실행됩니다.
+
+```sh
+HERMES_AGENT_SOURCE="$HOME/.hermes/hermes-agent" python3 -m unittest discover -s tests -v
 ```
 
 설치 도구 테스트는 임시 HOME과 명시적인 합성 fixture로 실행합니다. Darwin 경로 분기 테스트는 **macOS를 실제 실행한 테스트가 아니라 경로 시뮬레이션**입니다. Neovim 통합 테스트는 설치된 플러그인을 발견했을 때 네트워크 없이 실제 Neovim을 실행하고, 별도 cache/state를 사용합니다. 해당 도구/플러그인이 없으면 관련 테스트는 skip됩니다.

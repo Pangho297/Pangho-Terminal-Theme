@@ -1,0 +1,53 @@
+diff --git a/agent/display.py b/agent/display.py
+index 46bf04a034..45fbf1a3d8 100644
+--- a/agent/display.py
++++ b/agent/display.py
+@@ -55,9 +55,8 @@ def _get_skin():
+         return None
+ 
+ 
+-# Diff colors resolve lazily from the skin engine (light/dark aware) and are
+-# cached after the first resolution.
+-_diff_colors_cached: dict[str, str] | None = None
++# Resolve diff colors from the current skin on each render so live skin edits
++# and skin switches cannot reuse a stale foreground/background pair.
+ 
+ 
+ # Foreground diff colors: key -> (skin color key, dark-terminal fallback RGB).
+@@ -84,12 +83,11 @@ def _tinted_bg(rgb: tuple[int, int, int], dominant: int) -> str:
+ 
+ def _diff_ansi() -> dict[str, str]:
+     """Return ANSI escapes for diff display, resolved from the active skin."""
+-    global _diff_colors_cached
+-    if _diff_colors_cached is not None:
+-        return _diff_colors_cached
+     colors = {k: _fg(*rgb) for k, (_, rgb) in _DIFF_FG.items()} | {k: v[3] for k, v in _DIFF_BG.items()}
+     try:
+         skin = _get_skin()
++        if skin is None:
++            return colors
+         for key, (skin_key, fallback) in _DIFF_FG.items():
+             h = skin.get_color(skin_key, "")
+             colors[key] = _fg(*(_hex_rgb(h) if h and len(h) == 7 and h[0] == "#" else fallback))
+@@ -98,9 +96,20 @@ def _diff_ansi() -> dict[str, str]:
+             h = bg_hex[key]
+             if h and len(h) == 7:
+                 colors[key] = _tinted_bg(_hex_rgb(h), dominant)
++        # Match the TUI's diff tokens. Read raw pairs: foreground-only light-mode
++        # remapping must not darken an explicitly authored light background.
++        for key, bg_key, fg_key in (
++            ("plus", "diff_added", "diff_added_word"),
++            ("minus", "diff_removed", "diff_removed_word"),
++        ):
++            bg = skin.colors.get(bg_key, "")
++            fg = skin.colors.get(fg_key, "")
++            if all(isinstance(h, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", h) for h in (fg, bg)):
++                r, g, b = _hex_rgb(fg)
++                br, bg_, bb = _hex_rgb(bg)
++                colors[key] = f"\033[38;2;{r};{g};{b};48;2;{br};{bg_};{bb}m"
+     except Exception:
+         pass
+-    _diff_colors_cached = colors
+     return colors
+ 
+ 

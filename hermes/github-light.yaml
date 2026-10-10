@@ -42,6 +42,10 @@ colors:
   syntax_number: "#0550ae"
   syntax_keyword: "#cf222e"
   syntax_comment: "#57606a"
+  diff_added: "#dafbe1"
+  diff_added_word: "#116329"
+  diff_removed: "#ffebe9"
+  diff_removed_word: "#82071e"
 
 branding:
   agent_name: "Hermes Agent"
