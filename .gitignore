@@ -1,0 +1,30 @@
+# Python and editor/build cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+.DS_Store
+*.swp
+*.swo
+
+# Never publish account data, whole Hermes config, or runtime state
+.env
+.env.*
+**/auth.json
+**/credentials*
+**/*token*.json
+**/config.yaml
+**/state.db*
+**/session.json
+sessions/
+logs/
+*.log
+
+# Private backups and local validation output belong outside the repository
+backups/
+.theme-backups/
+*.bak
+*.backup
+verification-local.json

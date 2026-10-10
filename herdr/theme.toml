@@ -1,0 +1,25 @@
+# Theme-only fragment. Do not replace your entire Herdr config with this file.
+[theme]
+name = "terminal"
+auto_switch = false
+
+[theme.custom]
+accent = "#0969da"
+panel_bg = "#ffffff"
+sidebar_bg = "#f6f8fa"
+active_row_bg = "#ddf4ff"
+selection_bg = "#ddf4ff"
+surface0 = "#f6f8fa"
+surface1 = "#eaeef2"
+surface_dim = "#f6f8fa"
+overlay0 = "#8c959f"
+overlay1 = "#57606a"
+text = "#1f2328"
+subtext0 = "#57606a"
+mauve = "#8250df"
+green = "#1a7f37"
+yellow = "#9a6700"
+red = "#cf222e"
+blue = "#0969da"
+teal = "#1b7c83"
+peach = "#bc4c00"

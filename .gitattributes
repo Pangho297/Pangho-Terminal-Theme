@@ -1,0 +1,5 @@
+* text=auto eol=lf
+scripts/apply text eol=lf
+scripts/restore text eol=lf
+*.lua text eol=lf
+*.py text eol=lf
