@@ -1,7 +1,8 @@
 # Third-party notices
 
 The installer and appearance adapter are original code; no full Neovim plugin,
-application configuration, credentials, or font files are vendored here.
+account configuration, credentials, or font files are vendored here. A
+generated Powerlevel10k prompt configuration is included separately below.
 
 ## Ghostty palette
 
@@ -13,6 +14,20 @@ Default** palette, distributed by the iTerm2-Color-Schemes collection.
 - The collection notes that individual themes retain their authors' licenses.
 - GitHub theme project: https://github.com/primer/github-vscode-theme
 - GitHub theme license: `licenses/github-vscode-theme-MIT.txt`
+
+## Powerlevel10k prompt configuration
+
+`zsh/p10k.zsh` is a customized generated configuration based on Powerlevel10k's
+`config/p10k-lean.zsh`. It preserves the selected two-line prompt layout and
+uses the terminal's ANSI palette for its active colors. The Powerlevel10k
+plugin itself is an external dependency and is not vendored or downloaded
+by the installer.
+
+- Source: https://github.com/romkatv/powerlevel10k
+- Copyright (c) 2009–2014 Robby Russell and contributors
+- Copyright (c) 2014–2017 Ben Hilburn
+- Copyright (c) 2019 Roman Perepelitsa and contributors
+- License: `licenses/powerlevel10k-MIT.txt`
 
 ## Neovim dependency
 
