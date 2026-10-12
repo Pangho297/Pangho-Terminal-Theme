@@ -1,19 +1,21 @@
 # GitHub Light Terminal Theme
 
-Ghostty · Neovim/Neo-tree/bufferline · Herdr · Hermes를 같은 GitHub Light 계열로 맞추는 **테마 전용 저장소**입니다.
+Ghostty · Powerlevel10k · Neovim/Neo-tree/bufferline · Herdr · Hermes를 같은 GitHub Light 계열로 맞추는 **테마 전용 저장소**입니다.
 
 - 기본 배경: `#ffffff`
 - 보조 배경: `#f6f8fa`
 - 기본 글씨: `#1f2328`
 - 파란 포인트: `#0969da`
 
-전체 개발 환경이나 개인 설정을 배포하지 않습니다. 셸 실행 경로, 글꼴, 키맵, LSP, 기존 플러그인 옵션, 모델/프로바이더 설정은 대상 기기의 것을 유지합니다.
+전체 개발 환경이나 계정 설정을 배포하지 않습니다. 기본 적용은 셸 실행 경로, 글꼴, 키맵, LSP, 기존 플러그인 옵션, 모델/프로바이더 설정을 유지합니다. Powerlevel10k의 프롬프트 스냅샷과 Ghostty의 개인 외형 설정은 별도 선택 사항입니다.
 
 ## 구성
 
 ```text
 terminal-theme/
 ├── ghostty/github-light.conf       # Ghostty 팔레트 스냅샷
+├── ghostty/pangho-appearance.conf  # 선택적 폰트·macOS Option 키 설정
+├── zsh/p10k.zsh                    # 2줄 Lean 프롬프트, 터미널 팔레트 연동
 ├── neovim/github_light.lua         # 테마와 사이드바/탭 외형 모듈
 ├── herdr/theme.toml                # [theme] 부분만 담은 조각
 ├── hermes/github-light.yaml        # 계정 설정 없는 스킨
@@ -33,14 +35,14 @@ terminal-theme/
 - Neo-tree와 bufferline은 이 저장소가 새로 설치하거나 기능 설정을 변경하지 않습니다. 이미 사용하는 환경을 전제로 합니다.
 - 현재 Herdr/Hermes 버전이 사용자 지정 테마·스킨을 지원해야 합니다.
 
-폰트는 배포하거나 강제로 바꾸지 않습니다. 같은 타이포그래피까지 원하면 양쪽 기기에 `D2KodingLigature Nerd Font`를 별도로 설치하고 Ghostty의 글꼴 설정을 맞추세요.
+폰트는 배포하거나 강제로 바꾸지 않습니다. 같은 타이포그래피까지 원하면 양쪽 기기에 `D2Koding Ligature Nerd Font`를 별도로 설치하고 Ghostty의 글꼴 설정을 맞추세요.
 
 ## macOS 또는 Linux에서 적용
 
 저장소를 원하는 위치에 clone한 뒤, 먼저 변경 계획을 확인합니다.
 
 ```sh
-cd ~/Projects/terminal-theme
+cd ~/Personal/Pangho-Terminal-Theme
 ./scripts/apply --dry-run
 ```
 
@@ -57,6 +59,15 @@ cd ~/Projects/terminal-theme
 ./scripts/apply --only herdr hermes
 ```
 
+현재 Ghostty와 Powerlevel10k 프롬프트를 함께 재현하려면:
+
+```sh
+./scripts/apply --only ghostty powerlevel10k --dry-run
+./scripts/apply --only ghostty powerlevel10k
+```
+
+Powerlevel10k는 기본 적용 대상에 포함되지 않습니다. 명시적으로 선택하면 기존 `.p10k.zsh`를 백업하고 저장소의 프롬프트 스냅샷으로 교체합니다. 레이아웃과 프롬프트 동작도 교체되므로 dry-run을 먼저 확인하세요. `.zshrc`는 수정하거나 실행하지 않습니다.
+
 서버 reload를 생략하려면 `--no-reload`를 추가하세요. 사용 가능한 옵션과 경로 재정의는 `./scripts/apply --help`에서 확인할 수 있습니다.
 
 설치 도구는 기존 파일을 먼저 백업하고, 테마용 managed block/파일만 변경합니다. 재실행해도 같은 블록이 중복되지 않습니다. 오류가 발생하면 부분 적용을 되돌립니다. 지원하지 않는 설정 형식은 전체 파일을 덮어쓰는 대신 오류로 중단합니다.
@@ -66,12 +77,14 @@ cd ~/Projects/terminal-theme
 - Ghostty는 XDG 경로와 macOS의 `~/Library/Application Support/com.mitchellh.ghostty/` 경로를 확인합니다. 이미 존재하는 여러 설정 파일에 동일한 테마 지정과 색상값을 넣습니다. 기존 `background`, `foreground`, `palette` 등 직접 지정된 색상보다 managed block의 GitHub Light 색상이 우선하도록 하되, 셸·글꼴·키 설정은 유지합니다.
 - Neovim은 XDG 설정 경로와 `NVIM_APPNAME`을 존중합니다. 기존 `init.lua` 끝에 테마 모듈 호출만 추가합니다. `init.vim` 기반 환경은 자동 변경하지 않으므로 아래의 수동 통합 방법을 사용하세요.
 - Herdr는 `HERDR_CONFIG_PATH`, Hermes는 `HERMES_HOME`을 존중합니다. Hermes 프로필을 여러 개 쓴다면 적용할 프로필의 `HERMES_HOME`을 명시하세요.
+- Powerlevel10k는 `${ZDOTDIR:-$HOME}/.p10k.zsh`에 설치합니다. 다른 파일을 쓰는 환경은 `--p10k-config /absolute/path/to/p10k.zsh`로 지정하세요. 대상 기기의 `zsh`로 구문만 검사하며, 설치 중 프롬프트 파일이나 `.zshrc`를 실행하지 않습니다.
 - Linux의 `/usr/bin/zsh` 같은 셸 경로는 이 저장소에 포함하지 않습니다.
 - 경로 재정의에는 절대 경로를 사용하세요. 개행·NUL·`..`가 포함된 경로는 적용 전에 거부합니다.
 
 ### 적용 후
 
 - Ghostty: 설정 reload 또는 새 창에서 확인하세요.
+- Powerlevel10k: 테마를 이미 불러온 현재 zsh에서 `source "${ZDOTDIR:-$HOME}/.p10k.zsh"`를 실행하세요. 경로를 재정의했다면 해당 파일을 source하세요. 설치 도구의 자식 프로세스가 기존 셸을 재로드할 수는 없습니다.
 - Neovim: 작업을 저장한 뒤 다시 열어 확인하세요. 전체 `init.lua`를 다시 source하면 기존 autocommand/plugin 설정이 중복될 수 있으므로 권장하지 않습니다.
 - Herdr: 실행 중인 서버가 있으면 설정 reload를 시도하며, 서버를 종료하지 않습니다. reload를 하지 못했으면 출력된 경고를 확인하고 다음 실행에서 확인하세요.
 - Hermes: `hermes config get display.skin`이 `github-light`인지 확인하세요. 기존 화면에 이전 색이 남아 있다면 다음 실행에서도 확인하세요.
@@ -88,6 +101,41 @@ apply가 출력한 백업 디렉터리 경로를 사용합니다.
 적용 이후 파일을 직접 편집했다면 복구는 기본적으로 중단하여 그 변경을 보호합니다. 내용을 확인하고 **변경을 버려도 될 때만** `--force`를 사용하세요. 백업에는 원래 설정이 들어갈 수 있으므로 공개 저장소나 메시지에 올리지 마세요.
 
 기본 백업 위치는 `${XDG_STATE_HOME:-$HOME/.local/state}/terminal-theme/backups/`입니다. `--backup-dir`로 저장소 밖의 새 디렉터리를 지정할 수도 있습니다. 복구는 apply가 변경한 설정 파일·테마 모듈·스킨에 적용됩니다. Neovim 첫 실행에서 내려받은 테마 플러그인과 앱이 만든 캐시는 자동으로 삭제하지 않습니다.
+
+## Ghostty의 선택적 폰트·키 설정
+
+현재 사용하는 외형 조각은 `ghostty/pangho-appearance.conf`에 보관합니다. 기본 apply는 이 조각을 적용하지 않고 대상 기기의 폰트·키 설정을 유지합니다. 같은 환경을 원할 때만 Ghostty 설정 파일의 해당 항목을 다음처럼 맞추세요:
+
+```ini
+font-family = D2Koding Ligature Nerd Font
+macos-option-as-alt = true
+```
+
+폰트는 별도로 설치해야 하며, Option 키 설정은 macOS용입니다. 사용자 홈의 절대 경로나 셸 실행 경로는 이 조각에 포함하지 않습니다.
+
+## Powerlevel10k / Oh My Zsh 연동
+
+`zsh/p10k.zsh`는 현재 설정의 2줄 Lean 레이아웃, Nerd Font v3 아이콘, 24시간 표시, transient prompt와 instant prompt 옵션을 보관합니다. 디렉터리·성공·오류·Git 상태·개발 환경 등 실제 색상은 ANSI 팔레트 0–15번을 사용합니다. Ghostty 테마가 바뀌면 해당 팔레트 색상도 따라가며, 고정 RGB 값을 프롬프트에 넣지 않습니다. Git의 `my_git_formatter()` 내부 색상도 같은 팔레트로 맞췄습니다.
+
+zsh, Oh My Zsh, Powerlevel10k 자체는 별도로 설치되어 있어야 합니다. 이 저장소는 플러그인을 다운로드하지 않습니다. Oh My Zsh의 custom theme로 설치했다면 기존 `.zshrc`의 관련 줄 순서를 다음처럼 맞추세요. 이미 있는 source 줄을 중복 추가하지 마세요:
+
+```zsh
+# 기존 Oh My Zsh 초기화 전에 지정
+ZSH_THEME="powerlevel10k/powerlevel10k"
+source "$ZSH/oh-my-zsh.sh"
+
+# 테마를 불러온 뒤 프롬프트 설정 적용
+[[ ! -f "${ZDOTDIR:-$HOME}/.p10k.zsh" ]] || source "${ZDOTDIR:-$HOME}/.p10k.zsh"
+```
+
+Homebrew로 설치한 Powerlevel10k를 직접 source하는 방식이라면 Oh My Zsh 쪽의 Powerlevel10k 테마 로드와 중복하지 말고, 기존 초기화 뒤에서 다음 순서로 불러오세요:
+
+```zsh
+source "$(brew --prefix)/share/powerlevel10k/powerlevel10k.zsh-theme"
+source "${ZDOTDIR:-$HOME}/.p10k.zsh"
+```
+
+이미 적용한 레이아웃을 유지하면서 색상만 조정할 때는 `p10k configure`를 다시 실행하지 마세요. 이 명령은 설정을 다시 생성합니다. 전체 `.zshrc`, 개발용 환경변수, 인증값, 개인 백업은 저장소에 포함하지 않습니다.
 
 ## Neovim 수동 통합
 
@@ -160,7 +208,9 @@ HERMES_AGENT_SOURCE="$HOME/.hermes/hermes-agent" python3 -m unittest discover -s
 
 설치 도구 테스트는 임시 HOME과 명시적인 합성 fixture로 실행합니다. Darwin 경로 분기 테스트는 **macOS를 실제 실행한 테스트가 아니라 경로 시뮬레이션**입니다. Neovim 통합 테스트는 설치된 플러그인을 발견했을 때 네트워크 없이 실제 Neovim을 실행하고, 별도 cache/state를 사용합니다. 해당 도구/플러그인이 없으면 관련 테스트는 skip됩니다.
 
-이 저장소를 만든 환경에서는 Linux의 실제 도구로 검사합니다. macOS 실기에서의 최종 적용 확인은 별도로 필요합니다.
+초기 버전은 Linux의 실제 도구로 검사했습니다. Powerlevel10k 스냅샷과 선택적 설치는 macOS의 실제 zsh에서 추가로 검사하며, 기존 파일의 백업·재적용·복구와 Git 상태별 색상을 확인합니다. 추가 테스트는 격리된 HOME을 사용하며 실행 중인 사용자 셸을 바꾸지 않습니다.
+
+현재 macOS의 Ghostty는 합성 HOME/XDG 경로 외에 실제 Application Support 설정도 읽을 수 있습니다. 기존 `test_real_ghostty_colors_override_stale_settings`가 이 격리 가정 때문에 실패하는 환경에서는 전체 테스트가 통과했다고 간주하지 마세요. 설치 도구의 합성 fixture 테스트와 실제 현재 설정 확인은 별개입니다.
 
 초기 버전 검증:
 - 자동 테스트 40개 통과, skip 없음.
@@ -169,13 +219,14 @@ HERMES_AGENT_SOURCE="$HOME/.hermes/hermes-agent" python3 -m unittest discover -s
 - 직접 지정된 Ghostty 다크 색상 덮어쓰기와 `..` 경로 사전 거부 회귀 테스트 포함.
 - 기존 기기의 앱 설정 파일은 변경하지 않음.
 
-## GitHub에 직접 등록
+## GitHub 동기화
 
-이 로컬 저장소는 `main` 브랜치를 사용하며 origin은 설정하지 않습니다. GitHub에서 빈 저장소를 만든 다음:
+원격 저장소는 `Pangho297/Pangho-Terminal-Theme`, 기본 브랜치는 `main`입니다. 새 기기에서는:
 
 ```sh
-git remote add origin <your-repository-url>
-git push -u origin main
+git clone git@github.com:Pangho297/Pangho-Terminal-Theme.git
+cd Pangho-Terminal-Theme
+./scripts/apply --only ghostty powerlevel10k --dry-run
 ```
 
 API 키, `.env`, 인증 파일, 세션/로그/DB, 전체 Hermes 설정과 백업은 올리지 마세요. `.gitignore`는 보조 안전장치일 뿐이므로, 업로드 전 `git status`와 `git diff --cached`도 확인하세요.

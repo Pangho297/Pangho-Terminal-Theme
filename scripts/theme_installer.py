@@ -301,15 +301,49 @@ def _validate_skin(content: bytes) -> None:
         raise InstallerError('Hermes skin colors must be explicit six-digit hex strings')
 
 
+def _validate_zsh(content: bytes, env: dict) -> None:
+    executable = shutil.which('zsh', path=env.get('PATH', ''))
+    if not executable:
+        raise InstallerError('Powerlevel10k requires zsh on PATH for syntax validation; no files changed')
+    try:
+        result = subprocess.run([executable, '-dfn'], input=content, env=env,
+                                capture_output=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise InstallerError('Could not validate Powerlevel10k configuration; no files changed') from exc
+    if result.returncode != 0:
+        raise InstallerError('Invalid Powerlevel10k configuration; no files changed')
+
+
+def _p10k_target(requested: Path, env: dict) -> Path:
+    home = _absolute(env.get('HOME', str(Path.home())), Path.home())
+    requested = _absolute(requested, home)
+    startup_names = {'.zshenv', '.zprofile', '.zshrc', '.zlogin', '.zlogout'}
+    resolved = requested.resolve()
+    shell_dirs = {home, _absolute(env.get('ZDOTDIR') or home, home)}
+    if (requested.name.casefold() in startup_names or resolved.name.casefold() in startup_names
+            or any(resolved == (directory / name).resolve()
+                   or (resolved.exists() and (directory / name).exists()
+                       and resolved.samefile(directory / name))
+                   for directory in shell_dirs for name in startup_names)):
+        raise InstallerError('Powerlevel10k must not replace zsh startup files or their aliases '
+                             '(including hardlinks); no files changed')
+    return requested
+
+
 def install(repo: Path, paths: Paths, *, only=('ghostty', 'neovim', 'herdr', 'hermes'),
             dry_run=False, backup_dir=None, no_reload=False, env=None) -> Result:
     """Validate the complete plan before any target or backup is created."""
     repo = Path(repo).resolve()
     runtime_env = dict(os.environ if env is None else env)
     only = tuple(only)
-    if not only or set(only) - {'ghostty', 'neovim', 'herdr', 'hermes'}:
+    if not only or set(only) - {'ghostty', 'neovim', 'herdr', 'hermes', 'powerlevel10k'}:
         raise InstallerError('Select at least one supported application')
     changes = []
+    if 'powerlevel10k' in only:
+        target = _p10k_target(paths.p10k_config, runtime_env)
+        asset = (repo / 'zsh/p10k.zsh').read_bytes()
+        _validate_zsh(asset, runtime_env)
+        changes.append(_change(target, asset))
     if 'ghostty' in only:
         asset = (repo / 'ghostty/github-light.conf').read_bytes()
         _validate_ghostty(asset)
@@ -599,6 +633,7 @@ class Paths:
     herdr_config: Path
     hermes_home: Path
     state_dir: Path
+    p10k_config: Path
 
 
 def _absolute(value: str | Path, home: Path) -> Path:
@@ -642,7 +677,10 @@ def discover_paths(*, system: str | None = None, env=None, overrides=None) -> Pa
                            or xdg / 'herdr/config.toml', home),
                  _absolute(overrides.get('hermes_home') or env.get('HERMES_HOME')
                            or home / '.hermes', home),
-                 state / 'terminal-theme/backups')
+                 state / 'terminal-theme/backups',
+                 # Optional prompt paths stay lexical until Powerlevel10k is selected.
+                 Path(overrides.get('p10k_config') or
+                      Path(env.get('ZDOTDIR') or home) / '.p10k.zsh'))
 
 
 def _report(result: Result, dry_run: bool, action: str) -> None:
@@ -666,13 +704,14 @@ def apply_main(argv=None) -> int:
                'Existing plugin setup and mappings are not changed. init.vim-only configs and '
                'Herdr multiline TOML strings require manual integration.')
     parser.add_argument('--dry-run', action='store_true', help='validate and show the plan without target writes')
-    parser.add_argument('--only', nargs='+', choices=('ghostty', 'neovim', 'herdr', 'hermes'),
+    parser.add_argument('--only', nargs='+', choices=('ghostty', 'neovim', 'herdr', 'hermes', 'powerlevel10k'),
                         default=('ghostty', 'neovim', 'herdr', 'hermes'))
     parser.add_argument('--no-reload', action='store_true', help='skip Herdr server reload (Hermes activation still verified)')
     parser.add_argument('--ghostty-config', help='absolute Ghostty config file (override automatic discovery)')
     parser.add_argument('--neovim-config', help='absolute Neovim configuration DIRECTORY')
     parser.add_argument('--herdr-config', help='absolute Herdr TOML config file')
     parser.add_argument('--hermes-home', help='absolute Hermes home/profile directory')
+    parser.add_argument('--p10k-config', help='absolute Powerlevel10k config file (default: ${ZDOTDIR:-$HOME}/.p10k.zsh)')
     parser.add_argument('--backup-dir', help='new private backup directory outside the repository')
     args = parser.parse_args(argv)
     try:
@@ -686,6 +725,8 @@ def apply_main(argv=None) -> int:
                 print('Ghostty: reload configuration manually or restart the app.')
             if 'neovim' in args.only:
                 print('Neovim: restart/reload your editor; github-nvim-theme must be available or vim.pack enabled.')
+            if 'powerlevel10k' in args.only:
+                print('Powerlevel10k: source the installed config in your current zsh; .zshrc was not changed.')
         return 0
     except (InstallerError, OSError, UnicodeError) as exc:
         print(f'Error: {exc}', file=sys.stderr)
